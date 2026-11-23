@@ -207,6 +207,10 @@ export class InMemoryEventArchiveStorage implements EventArchiveStorage {
     return this.events.has(eventId);
   }
 
+  async count(): Promise<number> {
+    return this.events.size;
+  }
+
   async getStats(): Promise<SorokitResult<StorageStats>> {
     try {
       const allEvents = Array.from(this.events.values());

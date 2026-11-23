@@ -188,6 +188,15 @@ export interface EventArchiveStorage {
    * @returns Storage stats
    */
   getStats(): Promise<SorokitResult<StorageStats>>;
+
+  /**
+   * Return the total number of events currently in the store.
+   *
+   * Used by the archival manager's retention policy to decide how many
+   * events to evict before inserting a new batch. Implementations that
+   * back a persistent store may cache this value.
+   */
+  count(): Promise<number>;
 }
 
 /**
@@ -220,6 +229,18 @@ export interface EventArchivalOptions {
   onStorageError?:
     | ((error: Error, events: ArchivedContractEvent[]) => void)
     | undefined;
+  /**
+   * Maximum number of events to retain in the store. When a new batch
+   * would push the total above this limit, the oldest events are evicted
+   * first. Set to 0 (or omit) to disable the cap.
+   */
+  maxEvents?: number | undefined;
+  /**
+   * Maximum age of retained events in milliseconds. Events older than
+   * `Date.now() - maxAgeMs` are evicted on insert. Set to 0 (or omit) to
+   * disable age-based eviction.
+   */
+  maxAgeMs?: number | undefined;
 }
 
 /**

@@ -545,6 +545,21 @@ export function recordCacheHit(
 }
 
 /**
+ * Records the current number of archived contract events as a counter metric
+ * (`event_archival.total_events`). No-op when telemetry is uninitialized.
+ *
+ * @example
+ * setInterval(async () => {
+ *   const count = await manager.getArchivedEventCount();
+ *   recordArchivedEventCount(count);
+ * }, 10_000);
+ */
+export function recordArchivedEventCount(count: number): void {
+  if (!activeManager) return;
+  activeManager.recordCounter("event_archival.total_events", count);
+}
+
+/**
  * Returns aggregated metric summaries (duration percentiles, counts) from the active manager.
  * Emits a console warning if called before `initTelemetry()` (at most once per session).
  */

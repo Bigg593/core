@@ -11,11 +11,38 @@
 
 import { createSorokitClient } from "../../../src/client/createSorokitClient";
 import { signTransactionOffline } from "../../../src/wallet/signTransaction";
+import { createConnectionPool } from "../../../src/network/connectionPool";
+import { SERVER_POOL_DEFAULTS } from "../../../src/network/config";
+import { recordConnectionPoolMetrics } from "../../../src/performance/telemetry";
 import type { SorokitClient } from "../../../src/client/createSorokitClient";
 import type { NetworkType } from "../../../src/network/config";
 import type { SorokitResult } from "../../../src/shared/response";
 import type { TransactionResult } from "../../../src/transaction/types";
 import type { AccountInfo } from "../../../src/account/types";
+
+// ── Connection pool ───────────────────────────────────────────────────────────
+//
+// A single pool is shared across the process lifetime.  SERVER_POOL_DEFAULTS
+// sets sensible keepalive and eviction values for a long-running Node server:
+//   - persistent keepalive (keepAlive: true)
+//   - up to 10 idle slots before oldest is evicted (maxIdleSockets: 10)
+//   - idle origins released after 60 s (idleTimeoutMs: 60_000)
+//   - eviction sweep every 15 s (evictionIntervalMs: 15_000)
+//
+// Tune these values for your host's per-origin connection limits and traffic
+// profile; Horizon allows ~100 concurrent connections per IP by default.
+
+export const serverPool = createConnectionPool(SERVER_POOL_DEFAULTS);
+
+// Optional: report pool metrics to your telemetry pipeline every 15 s.
+// Remove this if you haven't called initTelemetry() — it's a no-op then.
+const _poolMetricsTimer = setInterval(() => {
+  recordConnectionPoolMetrics(serverPool.metrics());
+}, 15_000);
+// Prevent the timer from keeping the process alive in serverless runtimes
+if (typeof _poolMetricsTimer === "object" && "unref" in _poolMetricsTimer) {
+  (_poolMetricsTimer as { unref(): void }).unref();
+}
 
 // ── client factory ────────────────────────────────────────────────────────────
 //

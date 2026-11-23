@@ -9,6 +9,7 @@
  */
 
 import type { ResolvedNetworkConfig } from "../shared/types";
+import type { ConnectionPoolConfig } from "./connectionPool";
 
 export type NetworkType = "mainnet" | "testnet" | "futurenet";
 
@@ -34,4 +35,26 @@ export const NETWORK_DEFAULTS: Record<NetworkType, NetworkConfig> = {
     rpcUrl: "https://rpc-futurenet.stellar.org",
     networkPassphrase: "Test SDF Future Network ; October 2022",
   },
+};
+
+/**
+ * Recommended connection pool configuration for a long-running server process.
+ *
+ * These defaults balance socket reuse (persistent keepalive) with bounded
+ * resource consumption (idle eviction). Pass to `createConnectionPool()` or
+ * merge into your own `ConnectionPoolConfig`.
+ *
+ * @example
+ * import { createConnectionPool } from "sorokit-core/network";
+ * import { SERVER_POOL_DEFAULTS } from "sorokit-core/network/config";
+ *
+ * const pool = createConnectionPool(SERVER_POOL_DEFAULTS);
+ */
+export const SERVER_POOL_DEFAULTS: ConnectionPoolConfig = {
+  maxPoolSize: 20,
+  maxIdleSockets: 10,
+  idleTimeoutMs: 60_000,   // 1 minute — sockets reused across bursty request spikes
+  socketTimeoutMs: 30_000,
+  keepAlive: true,
+  evictionIntervalMs: 15_000,
 };

@@ -545,6 +545,39 @@ export function recordCacheHit(
 }
 
 /**
+ * Records active and idle socket counts from a {@link ConnectionPool} as
+ * gauge-style counter metrics so your observability stack can track pool
+ * health over time.
+ *
+ * Metric names:
+ * - `connection_pool.active_sockets`
+ * - `connection_pool.idle_sockets`
+ * - `connection_pool.total_origins`
+ *
+ * Call this periodically (e.g. from a setInterval aligned with your metrics
+ * flush interval) rather than on every request.
+ *
+ * No-op when telemetry is uninitialized.
+ *
+ * @example
+ * import { createConnectionPool } from "sorokit-core/network";
+ * import { recordConnectionPoolMetrics } from "sorokit-core/performance/telemetry";
+ *
+ * const pool = createConnectionPool({ maxIdleSockets: 10, keepAlive: true });
+ * setInterval(() => recordConnectionPoolMetrics(pool.metrics()), 10_000);
+ */
+export function recordConnectionPoolMetrics(metrics: {
+  activeSockets: number;
+  idleSockets: number;
+  totalOrigins: number;
+}): void {
+  if (!activeManager) return;
+  activeManager.recordCounter("connection_pool.active_sockets", metrics.activeSockets);
+  activeManager.recordCounter("connection_pool.idle_sockets", metrics.idleSockets);
+  activeManager.recordCounter("connection_pool.total_origins", metrics.totalOrigins);
+}
+
+/**
  * Returns aggregated metric summaries (duration percentiles, counts) from the active manager.
  * Emits a console warning if called before `initTelemetry()` (at most once per session).
  */

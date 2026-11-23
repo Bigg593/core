@@ -12,11 +12,22 @@
 import { ref, onUnmounted } from "vue";
 import { createSorokitClient } from "../../../src/client/createSorokitClient";
 import { FreighterAdapter } from "../../../src/wallet/adapters/freighter";
+import { enableDevtoolsBridge } from "../../../src/shared/devtoolsBridge";
 import type { SorokitClient } from "../../../src/client/createSorokitClient";
 import type { WalletState, SWKInstance } from "../../../src/wallet/types";
 import type { AssetBalance } from "../../../src/account/types";
 import type { NetworkType } from "../../../src/network/config";
 import type { ScVal } from "@stellar/stellar-sdk";
+
+// ── DevTools bridge ───────────────────────────────────────────────────────────
+//
+// Guards against production builds with a process.env check.  Bundlers that
+// perform dead-code elimination (Vite, Rollup, esbuild) will tree-shake the
+// import when NODE_ENV === "production", so it has zero runtime cost in prod.
+
+if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+  enableDevtoolsBridge();
+}
 
 export type InvokeProgress = "idle" | "preparing" | "signing" | "confirming" | "done";
 
@@ -32,7 +43,8 @@ export function useContract(
   network: NetworkType = "testnet",
 ) {
   // ── client ──────────────────────────────────────────────────────────────────
-  const clientResult = createSorokitClient({ network });
+  // debug: true enables the logger so the devtools bridge can forward events.
+  const clientResult = createSorokitClient({ network, debug: true });
   const client = ref<SorokitClient | null>(
     clientResult.status === "ok" ? clientResult.data : null,
   );

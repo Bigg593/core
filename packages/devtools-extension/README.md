@@ -52,6 +52,19 @@ dispatched by the page's own script, even on the same `window` object — only
    "Load Temporary Add-on...", and select `manifest.json` in this directory.
 4. Open your app, open DevTools, and select the "sorokit" panel.
 
+## Example apps
+
+Three example apps in this repo already enable the bridge in development:
+
+| App | File |
+|-----|------|
+| React wallet connect | `examples/react-wallet-connect/src/useSorokit.ts` |
+| Vue Soroban | `examples/vue-soroban/src/useContract.ts` |
+| Transaction dashboard | `examples/transaction-dashboard/react-dashboard.example.tsx` |
+
+Run any of these locally (follow the README at the repo root) and load the
+extension unpacked to see SDK events in the panel immediately.
+
 ## What's covered today
 
 - Wallet connect/disconnect (`wallet.connect`, `wallet.disconnect`)

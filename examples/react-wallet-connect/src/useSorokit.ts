@@ -12,10 +12,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { createSorokitClient } from "../../../src/client/createSorokitClient";
 import { FreighterAdapter } from "../../../src/wallet/adapters/freighter";
+import { enableDevtoolsBridge } from "../../../src/shared/devtoolsBridge";
 import type { SorokitClient } from "../../../src/client/createSorokitClient";
 import type { WalletState, SWKInstance } from "../../../src/wallet/types";
 import type { AssetBalance } from "../../../src/account/types";
 import type { NetworkType } from "../../../src/network/config";
+
+// ── DevTools bridge ───────────────────────────────────────────────────────────
+//
+// enableDevtoolsBridge() registers a log transport that forwards every SDK
+// structured-log record to a window CustomEvent named "sorokit:devtools".
+// The sorokit-core browser extension picks up these events and displays them
+// in a dedicated DevTools panel.
+//
+// The guard keeps the bridge out of production bundles. Tree-shakers
+// (Vite, esbuild, Rollup) eliminate the import when NODE_ENV === "production"
+// because the branch is statically unreachable.
+
+if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+  enableDevtoolsBridge();
+}
 
 export interface PaymentParams {
   destination: string;
@@ -56,8 +72,10 @@ export function useSorokit(
 
   // Build the client once on mount. createSorokitClient is synchronous and
   // cheap — it just validates config and resolves the network endpoints.
+  // debug: true is required so the logger emits records that the devtools
+  // bridge can forward to the extension panel.
   useEffect(() => {
-    const result = createSorokitClient({ network });
+    const result = createSorokitClient({ network, debug: true });
     if (result.status === "error") {
       setError(result.error.message);
       return;

@@ -12,6 +12,14 @@ import {
   type DashboardSnapshot,
 } from "../../src/transaction/transactionDashboard";
 import type { TransactionResult } from "../../src/transaction/types";
+import { enableDevtoolsBridge } from "../../src/shared/devtoolsBridge";
+
+// ── DevTools bridge ───────────────────────────────────────────────────────────
+// Forward SDK log records to the sorokit DevTools browser extension in dev.
+// Tree-shaken out of production builds by Vite/Rollup/esbuild.
+if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
+  enableDevtoolsBridge();
+}
 
 export const dashboard = new TransactionStatusAggregator({ maxEntries: 1000 });
 
